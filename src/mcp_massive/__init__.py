@@ -1,9 +1,39 @@
 import argparse
+import logging
 import os
 import sys
 from typing import Literal
 
 __all__ = ["main"]
+
+logger = logging.getLogger("mcp_massive")
+
+
+def _configure_logging(transport: str) -> None:
+    """Configure logging so that log levels are correctly reported.
+
+    For **stdio** transport stdout is the MCP protocol channel, so logs
+    must go to stderr (the default).  For network transports (sse,
+    streamable-http) stdout is free and should be used instead — many
+    hosting platforms (e.g. Railway) treat *all* stderr output as
+    error-level, which makes informational logs appear red.
+    """
+    log_stream = sys.stderr if transport == "stdio" else sys.stdout
+    handler = logging.StreamHandler(log_stream)
+    handler.setFormatter(logging.Formatter("%(levelname)s:\t %(message)s"))
+
+    root = logging.getLogger()
+    # Replace any pre-existing handlers (e.g. the default stderr one).
+    root.handlers = [handler]
+    root.setLevel(logging.INFO)
+
+    # Make sure uvicorn loggers also use our handler so that its
+    # "Waiting for application startup" / "Uvicorn running on …" lines
+    # are routed to the correct stream.
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        uv_logger = logging.getLogger(name)
+        uv_logger.handlers = [handler]
+        uv_logger.propagate = False
 
 
 def main() -> None:
@@ -41,26 +71,24 @@ def main() -> None:
         mcp_transport_str = os.environ.get("MCP_TRANSPORT", "stdio")
         transport = supported_transports.get(mcp_transport_str, "stdio")
 
-    # Check API key and print startup message
+    _configure_logging(transport)
+
+    # Check API key and log startup message
     massive_api_key = os.environ.get("MASSIVE_API_KEY", "")
     polygon_api_key = os.environ.get("POLYGON_API_KEY", "")
 
-    # Startup messages go to stderr — stdout is the MCP protocol channel
-    # for stdio transport; non-JSON data there corrupts the handshake.
     if massive_api_key:
-        print("Starting Massive MCP server with API key configured.", file=sys.stderr)
+        logger.info("Starting Massive MCP server with API key configured.")
     elif polygon_api_key:
-        print(
-            "Warning: POLYGON_API_KEY is deprecated. Please migrate to MASSIVE_API_KEY.",
-            file=sys.stderr,
+        logger.warning(
+            "POLYGON_API_KEY is deprecated. Please migrate to MASSIVE_API_KEY."
         )
-        print(
-            "Starting Massive MCP server with API key configured (using deprecated POLYGON_API_KEY).",
-            file=sys.stderr,
+        logger.info(
+            "Starting Massive MCP server with API key configured (using deprecated POLYGON_API_KEY)."
         )
         massive_api_key = polygon_api_key
     else:
-        print("Warning: MASSIVE_API_KEY environment variable not set.", file=sys.stderr)
+        logger.warning("MASSIVE_API_KEY environment variable not set.")
 
     base_url = os.environ.get("MASSIVE_API_BASE_URL", "https://api.massive.com").rstrip(
         "/"
