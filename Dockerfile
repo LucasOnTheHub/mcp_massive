@@ -22,4 +22,4 @@ ENV HOST=0.0.0.0
 
 EXPOSE 8000
 
-ENTRYPOINT ["uv", "run", "./entrypoint.py"]
+ENTRYPOINT ["python", "./entrypoint.py"]
