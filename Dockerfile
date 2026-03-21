@@ -16,4 +16,10 @@ RUN groupadd --gid 1000 mcp && \
     useradd --uid 1000 --gid 1000 --create-home mcp
 USER mcp
 
+# Default to streamable-http transport for cloud deployments
+ENV MCP_TRANSPORT=streamable-http
+ENV HOST=0.0.0.0
+
+EXPOSE 8000
+
 ENTRYPOINT ["uv", "run", "./entrypoint.py"]
