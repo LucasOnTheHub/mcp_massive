@@ -53,6 +53,12 @@ mass_mcp = FastMCP(
     ),
     host=os.environ.get("HOST", "0.0.0.0"),
     port=int(os.environ.get("PORT", "8000")),
+    # Disable DNS rebinding protection for cloud deployments (Railway, etc.)
+    # where requests arrive via a reverse proxy with a non-localhost Host header.
+    transport_security={"enable_dns_rebinding_protection": False},
+    # Stateless mode: each request creates a fresh transport, which is
+    # required for cloud environments without sticky sessions.
+    stateless_http=True,
 )
 
 METADATA_KEYS = {
