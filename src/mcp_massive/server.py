@@ -53,6 +53,9 @@ mass_mcp = FastMCP(
     ),
     host=os.environ.get("HOST", "0.0.0.0"),
     port=int(os.environ.get("PORT", "8000")),
+    # Serve on root path so remote MCP clients can connect without needing
+    # to append /mcp to the server URL.
+    streamable_http_path="/",
     # Disable DNS rebinding protection for cloud deployments (Railway, etc.)
     # where requests arrive via a reverse proxy with a non-localhost Host header.
     transport_security={"enable_dns_rebinding_protection": False},

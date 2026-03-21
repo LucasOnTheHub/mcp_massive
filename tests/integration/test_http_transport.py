@@ -50,7 +50,7 @@ def http_server(mock_env):
     # Wait for server to be ready by polling the MCP endpoint
     import httpx
 
-    mcp_url = f"http://127.0.0.1:{port}/mcp"
+    mcp_url = f"http://127.0.0.1:{port}/"
     for _ in range(50):
         try:
             httpx.get(mcp_url, timeout=1.0)
