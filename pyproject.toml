@@ -12,6 +12,7 @@ dependencies = [
     "bm25s>=0.2.0",
     "snowballstemmer>=2.2.0",
     "python-dotenv>=1.2.1",
+    "nest_asyncio>=1.6.0",
     "pydantic>=2.12.0",
     "sqlglot>=28.10.0",
 ]
